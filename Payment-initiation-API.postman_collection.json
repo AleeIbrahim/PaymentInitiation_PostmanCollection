@@ -1,0 +1,240 @@
+{
+	"info": {
+		"_postman_id": "62612dff-4098-4da5-8b7a-f6adbc2b5520",
+		"name": "Payment-initiation-API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "13058175"
+	},
+	"item": [
+		{
+			"name": "Initiate Payment",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// 1. Read request & response\r",
+							"const requestBody = JSON.parse(pm.request.body.raw);\r",
+							"const response = pm.response.json();\r",
+							"\r",
+							"const iban = requestBody.debtorAccount.iban;\r",
+							"const amount = parseFloat(requestBody.instructedAmount.amount);\r",
+							"\r",
+							"// 2. Define business rules\r",
+							"const ibanRegex = /^[A-Z]{2}[0-9]{2}[A-Z0-9]{18}$/;\r",
+							"const isIbanValid = ibanRegex.test(iban);\r",
+							"const isInsufficientFunds = amount > 1000;\r",
+							"\r",
+							"// 3. Test cases (response validation)\r",
+							"if (!isIbanValid) {\r",
+							"\r",
+							"    // -------- TestSuite-01: Invalid IBAN --------\r",
+							"    pm.test(\"TC-01 | Invalid IBAN | 422 returned\", function () {\r",
+							"        pm.expect(pm.response.code).to.equal(422);\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"TC-02 | Error type is INVALID_IBAN_FORMAT\", function () {\r",
+							"        pm.expect(response.type).to.equal(\"INVALID_IBAN_FORMAT\");\r",
+							"    });\r",
+							"\r",
+							"} else if (isInsufficientFunds) {\r",
+							"\r",
+							"    // -------- TestSuite-02: Insufficient Funds --------\r",
+							"    pm.test(\"TC-03 | Amount > 1000 | 400 returned\", function () {\r",
+							"        pm.expect(pm.response.code).to.equal(400);\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"TC-04 | Error type is INSUFFICIENT_FUNDS\", function () {\r",
+							"        pm.expect(response.type).to.equal(\"INSUFFICIENT_FUNDS\");\r",
+							"    });\r",
+							"\r",
+							"} else {\r",
+							"\r",
+							"    // -------- TestSuite-03: Successful Payment --------\r",
+							"    pm.test(\"TC-05 | Valid request | 201 returned\", function () {\r",
+							"        pm.expect(pm.response.code).to.equal(201);\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"TC-06 | Transaction status is RCVD\", function () {\r",
+							"        pm.expect(response.transactionStatus).to.equal(\"RCVD\");\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"TC-03 | Payment ID is present\", function () {\r",
+							"        pm.expect(response.paymentId).to.exist;\r",
+							"    });\r",
+							"\r",
+							"}\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"instructedAmount\": \r\n    {\r\n        \"currency\": \"EUR\",\r\n        \"amount\": \"{{amount}}\"\r\n    },\r\n    \"debtorAccount\":\r\n    {\r\n        \"iban\": \"{{debtor_iban}}\"\r\n    },\r\n    \"creditorAccount\": \r\n    {\r\n        \"iban\": \"DE89770400440532013000\"\r\n    },\r\n    \"creditorName\": \"Amazon EU\",\r\n    \"remittanceInformationUnstructured\": \"Invoice #AMZ-2024-001\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/v1/payments",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"v1",
+						"payments"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "201 Created",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"instructedAmount\": \r\n    {\r\n        \"currency\": \"EUR\",\r\n        \"amount\": \"150.75\"\r\n    },\r\n    \"debtorAccount\":\r\n    {\r\n        \"iban\": \"DE89370400440532013000\"\r\n    },\r\n    \"creditorAccount\": \r\n    {\r\n        \"iban\": \"DE89770400440532013000\"\r\n    },\r\n    \"creditorName\": \"Amazon EU\",\r\n    \"remittanceInformationUnstructured\": \"Invoice #AMZ-2024-001\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/v1/payments",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"payments"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"name": "Content-Type",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "{\r\n    \"transactionStatus\": \"RCVD\",\r\n    \"paymentId\": \"PAY123456789\",\r\n    \"transactionFeeIndicator\": true,\r\n    \"_links\": {\r\n        \"self\": {\r\n            \"href\": \"/v1/payments/PAY123456789\"\r\n        },\r\n        \"status\": {\r\n            \"href\": \"/v1/payments/PAY123456789/status\"\r\n        }\r\n    }\r\n}"
+				},
+				{
+					"name": "422 Unprocessable Entity",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"instructedAmount\": \r\n    {\r\n        \"currency\": \"EUR\",\r\n        \"amount\": \"150.75\"\r\n    },\r\n    \"debtorAccount\":\r\n    {\r\n        \"iban\": \"DE123\"\r\n    },\r\n    \"creditorAccount\": \r\n    {\r\n        \"iban\": \"DE89770400440532013000\"\r\n    },\r\n    \"creditorName\": \"Amazon EU\",\r\n    \"remittanceInformationUnstructured\": \"Invoice #AMZ-2024-001\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/v1/payments",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"payments"
+							]
+						}
+					},
+					"status": "Unprocessable Content",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"name": "Content-Type",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "{\r\n\"type\": \"INVALID_IBAN_FORMAT\",\r\n\"title\": \"Invalid IBAN format\",\r\n\"status\": 422,\r\n\"detail\": \"The provided IBAN format is invalid\",\r\n\"validationRules\": {\r\n\"pattern\": \"2 uppercase letters + 2 digits + 18 alphanumeric characters\",\r\n\"totalLength\": 22,\r\n\"allowedCharacters\": \"A-Z, 0-9, no spaces or special characters\"\r\n},\r\n\"invalidFields\": [\r\n{\r\n\"field\": \"debtorAccount.iban\",\r\n\"reason\": \"Format validation failed\",\r\n\"providedValue\": \"DE123\"\r\n}\r\n]\r\n}"
+				},
+				{
+					"name": "400 Bad Request",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"instructedAmount\": \r\n    {\r\n        \"currency\": \"EUR\",\r\n        \"amount\": \"2000.0\"\r\n    },\r\n    \"debtorAccount\":\r\n    {\r\n        \"iban\": \"DE89370400440532013000\"\r\n    },\r\n    \"creditorAccount\": \r\n    {\r\n        \"iban\": \"DE89770400440532013000\"\r\n    },\r\n    \"creditorName\": \"Amazon EU\",\r\n    \"remittanceInformationUnstructured\": \"Invoice #AMZ-2024-001\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/v1/payments",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"payments"
+							]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"name": "Content-Type",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"type\": \"INSUFFICIENT_FUNDS\",\n    \"title\": \"Insufficient funds\",\n    \"status\": 400,\n    \"detail\": \"The debtor account has insufficient funds to execute the payment\",\n    \"availableBalance\": \"850.00\",\n    \"requestedAmount\": \"2000.0\"\n}"
+				}
+			]
+		}
+	]
+}
