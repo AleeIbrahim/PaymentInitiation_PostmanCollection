@@ -1,0 +1,32 @@
+[
+  {
+	"_comment_": "Valid IBAN and Valid Amount",
+    "debtor_iban": "DE89370400440532013000",
+    "amount": "150.75"
+  },
+  {
+	"_comment_": "Invalid (Short) IBAN and Valid Amount",
+    "debtor_iban": "DE123",
+    "amount": "150.75"
+  },
+  {
+	"_comment_": "Valid IBAN and Invalid Amount",
+    "debtor_iban": "DE89370400440532013000",
+    "amount": "1500"
+  },
+  {
+	"_comment_": "Valid IBAN and Valid Amount (Lower Boundary-Value)",
+    "debtor_iban": "DE89370400440532013000",
+    "amount": "999"
+  },
+  {
+	"_comment_": "Valid IBAN and Valid Amount (Upper Boundary-Value)",
+    "debtor_iban": "DE89370400440532013000",
+    "amount": "1001"
+  },
+  {	
+	"_comment_": "Invalid (Special characters) IBAN and Valid Amount",
+    "debtor_iban": "DE89*70&0044$532@130#0",
+    "amount": "150.75"
+  }
+]
